@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>FCC Leader Board</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- Bootswatch -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/spacelab/bootstrap.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
+    <script src="https://unpkg.com/react@15.3.2/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15.3.2/dist/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+</head>
+<body>
+    <div id="container">
+
+    </div>
+
+    <script type="text/babel">
+
+        const LeaderBoardList = ({campers, active, toggle}) => (
+            <div className="row">
+                <table className="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Username</th>
+                            <th>
+                                <HeaderLink type="alltime" active={active} toggle={() => toggle("alltime")} />
+                            </th>
+                            <th>
+                                <HeaderLink type="recent" active={active} toggle={() => toggle("recent")} />
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {campers.map((camper, i) =>
+                            <LeaderBoardRow key={i} index={i} {...camper} />
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        )
+
+        const HeaderLink = ({type, active, toggle}) => (
+            <button className="btn btn-link" onClick={toggle}>
+                {(type == "alltime") ? "Brownie Points All Time" : "Brownie Points Last 30 Days"}
+                {(type == active) && <span className="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>}
+            </button>
+        )
+
+        const LeaderBoardRow = ({index, username, alltime, recent}) => (
+            <tr>
+                <td>{index+1}</td>
+                <td>{username}</td>
+                <td>{alltime}</td>
+                <td>{recent}</td>
+            </tr>
+        )
+        
+        class LeaderBoardContainer extends React.Component {
+            
+            constructor(props) {
+                super(props)
+                this.state = {
+                    active: "alltime",
+                    campers: []
+                }
+                this.toggle = this.toggle.bind(this)
+            }
+
+            toggle(type) {
+                var oldStatus = this.state.active;
+                //console.log('old status', oldStatus);
+                //console.log('new status', type);
+                
+                if (oldStatus != type) {
+                    var newActive = type;
+                    this.setState({
+                        active: newActive
+                    });
+                    this.getCampers(newActive);
+                }
+            }
+
+            componentDidMount() {
+                this.getCampers('alltime');
+            }
+
+            getCampers(type) {
+                var apiURL = 'https://fcctop100.herokuapp.com/api/fccusers/top/' + type
+                fetch(apiURL)
+                    .then(response => response.json())
+                    .then(campers => this.setState({
+                        campers
+                    }))
+                    .catch(ex => console.log('parsing failed', ex))
+            }
+
+            render() {
+                const {active, campers} = this.state
+                return (
+                    <div className="row">
+                        <h1>{this.props.title}</h1>
+                        <LeaderBoardList campers={campers} active={active} toggle={this.toggle} />
+                    </div>
+                )
+            }
+        }
+
+        const Footer = function() {
+            const codedWithArr = [
+                {
+                    link: 'https://facebook.github.io/react/',
+                    display: 'React'
+                },
+                {
+                    link: 'http://getbootstrap.com/',
+                    display: 'Bootstrap'
+                },
+                {
+                    link: 'https://bootswatch.com/spacelab/',
+                    display: 'Spacelab - Bootswatch Theme'
+                },
+                {
+                    link: 'https://github.com/github/fetch',
+                    display: 'fetch - A window.fetch JavaScript polyfill for API calls'
+                }
+            ];
+
+            const devInfo = {
+                    link: 'https://www.freecodecamp.com/jrstrayhorn',
+                    name: 'J.R. Strayhorn'
+            };
+            const renderCodedWith = codedWithArr.map((el, idx) => 
+                <span key={idx}>
+                    <a href={el.link} target="_blank"> {el.display}</a>
+                    {(idx !== codedWithArr.length-1) ? ',' : ''}
+                </span>
+            );
+            const renderDevInfo = <a href={devInfo.link} target="_blank">{devInfo.name}</a>;
+            return (
+                <div className="row footer pad-row">
+                    <p>Coded with {renderCodedWith} by {renderDevInfo}</p>
+                </div>
+            );
+        };
+
+        class App extends React.Component {
+            render() {
+                return (
+                    <div className="container">
+                        <LeaderBoardContainer title="Camper Leaderboard" />
+                        <Footer />
+                    </div>
+                )
+            }
+        }
+
+        ReactDOM.render(<App />, document.getElementById('container'))
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>FCC Recipe Box</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- Bootswatch -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css">
+    
+
+    <script src="https://wzrd.in/standalone/uuid%2Fv4@latest"></script>
+    <script src="https://unpkg.com/react@15.3.2/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15.3.2/dist/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <style>
+        .pad-row {
+            padding-top: 15px;
+        }
+        .side-pad-row {
+            padding: 0px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+
+    </div>
+
+    <script type="text/babel">
+        const Footer = function() {
+            const codedWithArr = [
+                {
+                    link: 'https://facebook.github.io/react/',
+                    display: 'React'
+                },
+                {
+                    link: 'http://getbootstrap.com/',
+                    display: 'Bootstrap'
+                }
+                ,
+                {
+                    link: 'https://bootswatch.com/cosmo/',
+                    display: 'Cosmo - Bootswatch Theme'
+                },
+                {
+                    link: 'https://www.npmjs.com/package/uuid',
+                    display: 'uuid - Simple, Fast generation of UUIDS'
+                }
+            ];
+
+            const devInfo = {
+                    link: 'https://www.freecodecamp.com/jrstrayhorn',
+                    name: 'J.R. Strayhorn'
+            };
+            const renderCodedWith = codedWithArr.map((el, idx) => 
+                <span key={idx}>
+                    <a href={el.link} target="_blank"> {el.display}</a>
+                    {(idx !== codedWithArr.length-1) ? ',' : ''}
+                </span>
+            );
+            const renderDevInfo = <a href={devInfo.link} target="_blank">{devInfo.name}</a>;
+            
+            const footerStyle = {
+                paddingVertical: 0,
+                paddingHorizontal: 10
+            };
+            
+            return (
+                <div className="row footer side-pad-row" style={footerStyle}>
+                    <p>Coded with {renderCodedWith} by {renderDevInfo}</p>
+                </div>
+            );
+        };
+
+        const Header = ({title}) => (
+            <div className="row side-pad-row">
+                <h1>{title}</h1>
+            </div>
+        )
+
+        const AddRecipeForm = ({onNewRecipe}) => {
+            
+            // local variables for ref
+            let _name, _ingredients
+
+            const submit = e => {
+                e.preventDefault()
+                onNewRecipe(_name.value, _ingredients.value)
+                //console.log(_name.value, _ingredients.value)
+                _name.value = ''
+                _ingredients.value = ''
+                _name.focus()
+            }
+            
+            return (
+                <div className="row side-pad-row">
+                    <form onSubmit={submit}>
+                        <div className="form-group">
+                            <label>Recipe Name</label>
+                            <input ref={input => _name = input}
+                                type="text" 
+                                className="form-control" 
+                                placeholder="Recipe Name..." />
+                        </div>
+                        <div className="form-group">
+                            <label>Ingredients</label>
+                            <input ref={input => _ingredients = input}
+                                type="text" 
+                                className="form-control" 
+                                placeholder="Ingredients (separate w/ commas)..." />
+                        </div>
+                        <button className="btn btn-success">
+                            ADD
+                        </button>
+                        
+                    </form>
+                </div>
+            )
+        }
+
+        const RecipeList = ({ recipes=[], onRemove=f=>f, editing=null, onToggle=f=>f, onEdit=f=>f }) => (
+            <div className="row pad-row side-pad-row">
+                {(recipes.length === 0) ?
+                    <p>No Recipes Listed. (Please add a recipe)</p> :
+                    <div>
+                    <p>Click on the recipe to edit.</p>
+                    {recipes.map(recipe =>
+                        <Recipe key={recipe.id}
+                            {...recipe}
+                            editing={editing}
+                            onRemove={() => onRemove(recipe.id)}
+                            onToggle={() => onToggle(recipe.id)}
+                            onEdit={onEdit}
+                            />
+                    )}
+                    </div>
+
+                }
+            </div>
+        )
+
+        const Recipe = ({ id, name, ingredients, onRemove=f=>f, editing=null, onToggle=f=>f, onEdit=f=>f}) => {
+            let _name, _ingredients
+            const handleClick = e => {
+                onEdit(id, _name.value, _ingredients.value);
+            }
+            return (
+                (editing !== id) ?
+                <div className="panel panel-primary">
+                    <div className="panel-heading">
+                        <h3 onClick={onToggle} className="panel-title">{name}</h3>
+                        <button onClick={onRemove}
+                            className="btn btn-danger pull-right">
+                            <span className="glyphicon glyphicon-remove"
+                                    aria-hidden="true">
+                                    </span>
+                        </button>
+                    </div>
+                    <div className="panel-body">
+                        <span onClick={onToggle}>
+                            <ul>
+                                {ingredients.split(',').map((i, idx) =>
+                                    <li key={idx}>{i.trim()}</li>
+                                )}
+                            </ul>
+                        </span>
+                    </div>
+                </div>
+                :
+                <div className="panel panel-primary">
+                    <div className="panel-heading">
+                        <input
+                            type="text"
+                            className="form-control"
+                            defaultValue={name}
+                            ref={input => _name = input}
+                        />
+                        <button onClick={handleClick}
+                            className="btn btn-success pull-right">
+                                <span className="glyphicon glyphicon-ok"
+                                    aria-hidden="true">
+                                    </span>
+                            </button>
+                    </div>
+                    <div className="panel-body">
+                        <input
+                            type="ingredients"
+                            className="form-control"
+                            defaultValue={ingredients}
+                            ref={input => _ingredients = input}
+                        />
+                    </div>
+                </div>
+                
+            )
+        }
+
+        class App extends React.Component {
+
+            constructor(props) {
+                super(props)
+                this.state = {
+                    recipes: [],
+                    editing: null
+                }
+                this.addRecipe = this.addRecipe.bind(this)
+                this.removeRecipe = this.removeRecipe.bind(this)
+                this.toggleEditing = this.toggleEditing.bind(this)
+                this.editRecipe = this.editRecipe.bind(this)
+            }
+
+            addRecipe(name, ingredients) {
+                const recipes = [
+                    ...this.state.recipes,
+                    {
+                        id: uuidv4(),
+                        name,
+                        ingredients
+                    }
+                ]
+                this.saveRecipes(recipes)
+                this.setState({
+                    recipes: recipes,
+                    editing: null
+                })
+            }
+
+            editRecipe(id, name, ingredients) {
+                const recipes = this.state.recipes.map(recipe =>
+                    (recipe.id !== id) ?
+                        recipe :
+                        {
+                            ...recipe,
+                            name,
+                            ingredients
+                        }
+                )
+                this.saveRecipes(recipes)
+                this.setState({
+                    recipes: recipes,
+                    editing: null
+                })
+            }
+
+            removeRecipe(id) {
+                const recipes = this.state.recipes.filter(
+                    recipe => recipe.id !== id
+                )
+                this.saveRecipes(recipes)
+                this.setState({recipes})
+            }
+
+            toggleEditing(id) {
+                this.setState({editing: id})
+            }
+
+            saveRecipes(recipes) {
+                localStorage.setItem("_jrstrayhorn_recipes", JSON.stringify(recipes));
+            }
+
+            componentDidMount() {
+                this.loadRecipes();
+            }
+
+            loadRecipes() {
+                if (localStorage.getItem("_jrstrayhorn_recipes")) {
+                    let recipes = JSON.parse(localStorage.getItem("_jrstrayhorn_recipes"))
+                    this.setState({
+                        recipes: recipes
+                    })
+                }
+            }
+
+            render() {
+                const { addRecipe, removeRecipe, toggleEditing, editRecipe } = this
+                const { recipes, editing } = this.state
+                return (
+                    <div className="container">
+                        <Header title="Recipe Box" />
+                        <AddRecipeForm onNewRecipe={addRecipe} />
+                        <RecipeList recipes={recipes}
+                            editing={editing}
+                            onRemove={removeRecipe}
+                            onToggle={toggleEditing}
+                            onEdit={editRecipe} />
+                        <Footer />
+                    </div>
+                )
+            }
+        }
+
+        ReactDOM.render(<App />, document.getElementById('container'))
+    </script>
+</body>
+</html>
